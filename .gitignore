@@ -11,7 +11,7 @@ node_modules/
 **/.env
 
 # === Logs ===
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -30,8 +30,9 @@ coverage/
 # === Firebase / Cloud ===
 .firebase/
 .firebaserc
-serviceAccount.json
 *.pem
+serviceAccount.json
+backend/serviceAccountKey.json
 
 # === OS and editor files ===
 .DS_Store
@@ -56,6 +57,8 @@ frontend/.env.test
 frontend/node_modules/
 frontend/dist/
 frontend/build/
+frontend/coverage/
+frontend/public/assets/
 
 # === Backend specific ===
 backend/.env
@@ -63,10 +66,23 @@ backend/node_modules/
 backend/dist/
 backend/build/
 backend/uploads/
-backend/.serviceAccount.json
+backend/coverage/
+backend/serviceAccountKey.json
+
+# === Testing ===
+*.lcov
+*.snap
+cypress/screenshots/
+cypress/videos/
+__tests__/
+__mocks__/
 
 # === Misc ===
 *.iml
 *.log.*
 *.bak
 *.tmp
+*.orig
+*.rej
+*.sublime-workspace
+*.sublime-project
