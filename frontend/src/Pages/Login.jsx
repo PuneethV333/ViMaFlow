@@ -1,24 +1,27 @@
-import React, { useContext, useState } from 'react';
-import { AuthContext } from '../Context/AuthProvider';
-import { toast } from 'react-toastify';
+import React, { useContext, useState } from "react";
+import { AuthContext } from "../Context/AuthProvider";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
+  const navigate = useNavigate();
   const { signInViaEmail, viaGoogle, viaGit } = useContext(AuthContext);
-
-  const [email, setEmail] = useState('');
-  const [pass, setPass] = useState('');
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
   const [googleLoading, setGoogleLoading] = useState(false);
   const [gitLoading, setGitLoading] = useState(false);
 
   const handleBtn = async () => {
     if (!email || !pass) {
-      toast.error('Please enter email and password');
+      toast.error("Please enter email and password");
       return;
     }
     try {
       await signInViaEmail(email, pass);
+      toast.success("🎉 Logged in successfully!");
+      navigate("/dashboard");
     } catch (err) {
-      toast.error(err);
+      toast.error(err.message || "Login failed");
     }
   };
 
@@ -26,9 +29,11 @@ const Login = () => {
     try {
       setGoogleLoading(true);
       await viaGoogle();
+      toast.success("🎉 Signed in with Google!");
+      navigate("/dashboard");
     } catch (err) {
       console.error(err);
-      toast.error('Failed to sign in with Google');
+      toast.error("Failed to sign in with Google");
     } finally {
       setGoogleLoading(false);
     }
@@ -38,29 +43,34 @@ const Login = () => {
     try {
       setGitLoading(true);
       await viaGit();
+      toast.success("🎉 Signed in with GitHub!");
+      navigate("/dashboard");
     } catch (err) {
       console.error(err);
-      toast.error('Failed to sign in with GitHub');
+      toast.error("Failed to sign in with GitHub");
     } finally {
       setGitLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0F1C] flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md bg-[#121826] rounded-xl p-6 sm:p-8 flex flex-col gap-6 shadow-lg">
+    <div className="min-h-screen bg-[#0A0F1C] flex items-center justify-center px-4 overflow-x-hidden">
+      <div className="w-full max-w-sm bg-[#121826]/80 backdrop-blur-md border border-[#2A2F3C] rounded-xl p-5 sm:p-6 flex flex-col gap-5 shadow-[0_0_20px_rgba(0,0,0,0.3)]  transition-all duration-300">
         <img
           src="https://res.cloudinary.com/deymewscv/image/upload/v1760784489/smaller_mobile_versi_y0q4zd.png"
           alt="ViMa-Flow"
-          className="w-20 sm:w-24 mx-auto"
+          className="w-20 mx-auto drop-shadow-lg"
         />
+        <h2 className="text-center text-xl sm:text-2xl font-semibold text-white">
+          Welcome Back 👋
+        </h2>
 
         <input
           type="email"
           placeholder="Your email address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="px-4 py-3 rounded-md bg-[#1A1F2C] text-white text-sm border border-[#2A2F3C] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-3 rounded-lg bg-[#1A1F2C] text-white text-sm border border-[#2A2F3C] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
         />
 
         <input
@@ -68,12 +78,12 @@ const Login = () => {
           placeholder="Your password"
           value={pass}
           onChange={(e) => setPass(e.target.value)}
-          className="px-4 py-3 rounded-md bg-[#1A1F2C] text-white text-sm border border-[#2A2F3C] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-3 rounded-lg bg-[#1A1F2C] text-white text-sm border border-[#2A2F3C] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
         />
 
         <button
           onClick={handleBtn}
-          className="py-3 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700 transition"
+          className="py-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium hover:from-blue-500 hover:to-indigo-500 active:scale-95 transition-all"
         >
           Sign In
         </button>
@@ -82,8 +92,8 @@ const Login = () => {
           <button
             onClick={handleViaGoogle}
             disabled={googleLoading}
-            className={`flex items-center justify-center gap-2 py-3 rounded-md bg-white text-black transition ${
-              googleLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'
+            className={`flex items-center justify-center gap-2 py-3 rounded-lg bg-[#1A1F2C] text-white border border-[#2A2F3C] hover:bg-[#202636] transition ${
+              googleLoading ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             <img
@@ -92,15 +102,15 @@ const Login = () => {
               className="w-5 h-5"
             />
             <span className="text-sm font-medium">
-              {googleLoading ? 'Signing in...' : 'Sign in with Google'}
+              {googleLoading ? "Signing in..." : "Sign in with Google"}
             </span>
           </button>
 
           <button
             onClick={handleViaGit}
             disabled={gitLoading}
-            className={`flex items-center justify-center gap-2 py-3 rounded-md bg-white text-black transition ${
-              gitLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'
+            className={`flex items-center justify-center gap-2 py-3 rounded-lg bg-[#1A1F2C] text-white border border-[#2A2F3C] hover:bg-[#202636] transition ${
+              gitLoading ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             <img
@@ -109,7 +119,7 @@ const Login = () => {
               className="w-5 h-5"
             />
             <span className="text-sm font-medium">
-              {gitLoading ? 'Signing in...' : 'Sign in with Github'}
+              {gitLoading ? "Signing in..." : "Sign in with GitHub"}
             </span>
           </button>
         </div>

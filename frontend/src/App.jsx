@@ -2,7 +2,10 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Login from "./Pages/Login";
 import Signup from "./Pages/Signup";
+import Home from "./Pages/Home";
 import { ToastContainer } from "react-toastify";
+import Dashboard from "./Pages/Dashboard";
+import Profile from "./Pages/Profile";
 
 const App = () => {
   return (
@@ -10,6 +13,9 @@ const App = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/" element={<Home/>}/>
+        <Route path="/dashboard" element={<Dashboard/>}/>
+        <Route path="/profile" element={<Profile/>}/>
       </Routes>
       <ToastContainer position="top-right" autoClose={3000} />
     </>

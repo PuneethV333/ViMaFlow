@@ -1,5 +1,4 @@
-import React, { createContext } from "react";
-import { useEffect } from "react";
+import React, { createContext, useEffect, useState } from "react";
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -8,7 +7,6 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 import { Auth, gitProvider, googleProvider } from "../config/firebase";
-import { useState } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
 
@@ -46,14 +44,15 @@ export const saveGoogleUser = async (user, token) => {
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    return res.data; 
+    toast.success("✅ Google user saved successfully!");
+    return res.data;
   } catch (err) {
     if (err.response?.data?.message === "User already exists") {
-      const token = await user.getIdToken();
       const existingRes = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/api/users/me`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      toast.info("ℹ️ Existing Google user logged in!");
       return existingRes.data;
     }
 
@@ -78,13 +77,15 @@ export const saveGitUser = async (user, token) => {
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    return res.data; 
+    toast.success("✅ GitHub user saved successfully!");
+    return res.data;
   } catch (err) {
     if (err.response?.data?.message === "User already exists") {
       const existingRes = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/api/users/me`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      toast.info("ℹ️ Existing GitHub user logged in!");
       return existingRes.data;
     }
 
@@ -92,7 +93,7 @@ export const saveGitUser = async (user, token) => {
       "Error saving Github user:",
       err.response?.data || err.message
     );
-    toast.error("Failed to save Github user to backend");
+    toast.error("⚠ Failed to save GitHub user to backend");
     return null;
   }
 };
@@ -100,13 +101,7 @@ export const saveGitUser = async (user, token) => {
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(Auth, (crrUser) => {
-      setUser(crrUser);
-    });
-    return () => unsubscribe();
-  }, []);
+  const [loading,setLoading] = useState(true);
 
   const fetchUserData = async (firebaseUser) => {
     if (!firebaseUser) return setUserData(null);
@@ -126,6 +121,22 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(Auth, async (crrUser) => {
+      setUser(crrUser);
+      if (crrUser) {
+        await fetchUserData(crrUser);
+      } else {
+        setUserData(null);
+      }
+      setLoading(false)
+    });
+    return () => unsubscribe();
+  }, []);
+
+  
+
+
   const signUpViaEmail = async (email, password, fullname) => {
     try {
       const userCred = await createUserWithEmailAndPassword(
@@ -135,6 +146,7 @@ const AuthProvider = ({ children }) => {
       );
 
       const token = await userCred.user.getIdToken();
+      
 
       await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/users/signup`, {
         email,
@@ -142,7 +154,7 @@ const AuthProvider = ({ children }) => {
         displayName: fullname,
       });
 
-      toast.success("User registered successfully!");
+      toast.success("🎉 User registered successfully!");
       return userCred.user;
     } catch (err) {
       console.error(err);
@@ -153,17 +165,16 @@ const AuthProvider = ({ children }) => {
   const signInViaEmail = async (email, password) => {
     try {
       const userCred = await signInWithEmailAndPassword(Auth, email, password);
-
       await reload(userCred.user);
 
       const token = await userCred.user.getIdToken();
-
       const res = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/api/users/me`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
       setUserData(res.data);
-      toast.success("User Login successfully!");
+      toast.success("✅ Logged in successfully!");
     } catch (err) {
       console.error(err);
       toast.error(getFriendlyError(err));
@@ -174,6 +185,7 @@ const AuthProvider = ({ children }) => {
     await Auth.signOut();
     setUser(null);
     setUserData(null);
+    toast.info("👋 Signed out successfully!");
   };
 
   const viaGoogle = async () => {
@@ -181,9 +193,10 @@ const AuthProvider = ({ children }) => {
       const res = await signInWithPopup(Auth, googleProvider);
       const token = await res.user.getIdToken();
 
-      const savedUser = await saveGoogleUser(res.user, token);
-
+      await saveGoogleUser(res.user, token);
       await fetchUserData(res.user);
+
+      toast.success("🎉 Logged in with Google!");
     } catch (err) {
       console.error("Google signin error:", err);
       toast.error(getFriendlyError(err));
@@ -195,9 +208,10 @@ const AuthProvider = ({ children }) => {
       const res = await signInWithPopup(Auth, gitProvider);
       const token = await res.user.getIdToken();
 
-      const savedUser = await saveGitUser(res.user, token); // handles new or existing user
+      await saveGitUser(res.user, token);
+      await fetchUserData(res.user);
 
-      await fetchUserData(res.user); // updates frontend state with user info
+      toast.success("🎉 Logged in with GitHub!");
     } catch (err) {
       console.error("Git signin error:", err);
       toast.error(getFriendlyError(err));
@@ -209,6 +223,7 @@ const AuthProvider = ({ children }) => {
       value={{
         user,
         userData,
+        loading,
         signInViaEmail,
         signUpViaEmail,
         signout,
