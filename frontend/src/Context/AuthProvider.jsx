@@ -1,164 +1,89 @@
 import React, { createContext, useEffect, useState } from "react";
 import {
   createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  reload,
   signInWithEmailAndPassword,
   signInWithPopup,
+  onAuthStateChanged,
+  reload,
 } from "firebase/auth";
-import { Auth, gitProvider, googleProvider } from "../config/firebase";
-import { toast } from "react-toastify";
+import { Auth, googleProvider, gitProvider } from "../config/firebase";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 export const AuthContext = createContext();
 
-export const getFriendlyError = (err) => {
-  if (err.code) {
-    const firebaseErrors = {
-      "auth/user-not-found": "No account found with this email",
-      "auth/wrong-password": "Incorrect password",
-      "auth/invalid-email": "Invalid email address",
-      "auth/email-already-in-use": "Email already in use",
-      "auth/weak-password": "Password should be at least 6 characters",
-      "auth/popup-closed-by-user": "Popup closed before completing sign-in",
-      "auth/cancelled-popup-request": "Popup cancelled, try again",
-      "auth/too-many-requests": "Too many attempts, try again later",
-    };
-    return firebaseErrors[err.code] || "Something went wrong, please try again";
-  } else if (err.response) {
-    return err.response.data?.message || "Server error, please try again";
-  } else {
-    return err.message || "Something went wrong";
-  }
-};
-
-export const saveGoogleUser = async (user, token) => {
-  try {
-    const email = user.email || "NoEmailProvided";
-    const displayName = user.displayName || "Unknown Name";
-    const uid = user.uid;
-
-    const res = await axios.post(
-      `${import.meta.env.VITE_BACKEND_URL}/api/users/google`,
-      { email, displayName, firebaseUid: uid },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    toast.success("✅ Google user saved successfully!");
-    return res.data;
-  } catch (err) {
-    if (err.response?.data?.message === "User already exists") {
-      const existingRes = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/users/me`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.info("ℹ️ Existing Google user logged in!");
-      return existingRes.data;
-    }
-
-    console.error(
-      "Error saving Google user:",
-      err.response?.data || err.message
-    );
-    toast.error("⚠ Failed to save Google user to backend");
-    return null;
-  }
-};
-
-export const saveGitUser = async (user, token) => {
-  try {
-    const email = user.email || "NoEmailProvided";
-    const displayName = user.displayName || "Unknown Name";
-    const uid = user.uid;
-
-    const res = await axios.post(
-      `${import.meta.env.VITE_BACKEND_URL}/api/users/git`,
-      { email, displayName, firebaseUid: uid },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    toast.success("✅ GitHub user saved successfully!");
-    return res.data;
-  } catch (err) {
-    if (err.response?.data?.message === "User already exists") {
-      const existingRes = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/users/me`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.info("ℹ️ Existing GitHub user logged in!");
-      return existingRes.data;
-    }
-
-    console.error(
-      "Error saving Github user:",
-      err.response?.data || err.message
-    );
-    toast.error("⚠ Failed to save GitHub user to backend");
-    return null;
-  }
-};
-
-const AuthProvider = ({ children }) => {
+export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
-  const [loading,setLoading] = useState(true);
+  const [project, setProject] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  // Fetch user data from backend
   const fetchUserData = async (firebaseUser) => {
     if (!firebaseUser) return setUserData(null);
     try {
       const token = await firebaseUser.getIdToken(true);
       const res = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/api/users/me`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setUserData(res.data);
     } catch (err) {
       console.warn("Backend user not found yet:", err.response?.data?.message);
       setUserData(null);
-      throw err;
+    }
+  };
+
+  // Fetch project data
+  const fetchProjectData = async (userid) => {
+    if (!userid) return [];
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/api/project/user/${userid}`
+      );
+      return res.data || [];
+    } catch (err) {
+      console.warn("Backend project not found:", err.response?.data?.message);
+      return [];
     }
   };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(Auth, async (crrUser) => {
       setUser(crrUser);
-      if (crrUser) {
-        await fetchUserData(crrUser);
-      } else {
-        setUserData(null);
-      }
-      setLoading(false)
+      if (crrUser) await fetchUserData(crrUser);
+      else setUserData(null);
+      setLoading(false);
     });
     return () => unsubscribe();
   }, []);
 
-  
+  useEffect(() => {
+    const userId = userData?._id;
+    if (userId) {
+      fetchProjectData(userId).then((data) => setProject(data || []));
+    } else {
+      setProject([]);
+    }
+  }, [userData]);
 
+  const updateUserData = (newData) => {
+    setUserData((prev) => ({ ...prev, ...newData }));
+  };
 
   const signUpViaEmail = async (email, password, fullname) => {
     try {
-      const userCred = await createUserWithEmailAndPassword(
-        Auth,
-        email,
-        password
-      );
-
-      const token = await userCred.user.getIdToken();
-      
-
+      const userCred = await createUserWithEmailAndPassword(Auth, email, password);
       await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/users/signup`, {
         email,
         firebaseUid: userCred.user.uid,
         displayName: fullname,
       });
-
       toast.success("🎉 User registered successfully!");
       return userCred.user;
     } catch (err) {
       console.error(err);
-      toast.error(getFriendlyError(err));
+      toast.error(err.message || "Signup failed");
     }
   };
 
@@ -166,18 +91,11 @@ const AuthProvider = ({ children }) => {
     try {
       const userCred = await signInWithEmailAndPassword(Auth, email, password);
       await reload(userCred.user);
-
-      const token = await userCred.user.getIdToken();
-      const res = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/users/me`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      setUserData(res.data);
+      await fetchUserData(userCred.user);
       toast.success("✅ Logged in successfully!");
     } catch (err) {
       console.error(err);
-      toast.error(getFriendlyError(err));
+      toast.error(err.message || "Signin failed");
     }
   };
 
@@ -191,30 +109,32 @@ const AuthProvider = ({ children }) => {
   const viaGoogle = async () => {
     try {
       const res = await signInWithPopup(Auth, googleProvider);
-      const token = await res.user.getIdToken();
-
-      await saveGoogleUser(res.user, token);
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/users/google`, {
+        email: res.user.email,
+        displayName: res.user.displayName,
+        firebaseUid: res.user.uid,
+      });
       await fetchUserData(res.user);
-
       toast.success("🎉 Logged in with Google!");
     } catch (err) {
-      console.error("Google signin error:", err);
-      toast.error(getFriendlyError(err));
+      console.error(err);
+      toast.error(err.message || "Google login failed");
     }
   };
 
   const viaGit = async () => {
     try {
       const res = await signInWithPopup(Auth, gitProvider);
-      const token = await res.user.getIdToken();
-
-      await saveGitUser(res.user, token);
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/users/git`, {
+        email: res.user.email,
+        displayName: res.user.displayName,
+        firebaseUid: res.user.uid,
+      });
       await fetchUserData(res.user);
-
       toast.success("🎉 Logged in with GitHub!");
     } catch (err) {
-      console.error("Git signin error:", err);
-      toast.error(getFriendlyError(err));
+      console.error(err);
+      toast.error(err.message || "GitHub login failed");
     }
   };
 
@@ -224,11 +144,15 @@ const AuthProvider = ({ children }) => {
         user,
         userData,
         loading,
-        signInViaEmail,
+        project,
         signUpViaEmail,
+        signInViaEmail,
         signout,
         viaGoogle,
         viaGit,
+        updateUserData,
+        fetchUserData,
+        fetchProjectData,
       }}
     >
       {children}
