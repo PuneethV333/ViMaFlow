@@ -8,11 +8,10 @@ import ViMaCompass from "../components/ViMaCompass";
 import { gsap } from "gsap";
 
 const ProfilePicWithRing = ({ src, onClick }) => {
-  const ringRef = useRef();
   const ringGradientRef = useRef();
 
   useEffect(() => {
-    // Infinite rotation of the ring
+    
     gsap.to(ringRef.current, {
       rotation: 360,
       duration: 6,
@@ -20,7 +19,7 @@ const ProfilePicWithRing = ({ src, onClick }) => {
       ease: "linear",
     });
 
-    // Alternating gradient color animation
+    
     gsap.to(ringGradientRef.current, {
       backgroundPosition: "200% 0%",
       duration: 4,
@@ -34,7 +33,6 @@ const ProfilePicWithRing = ({ src, onClick }) => {
     <div className="relative w-32 h-32 flex items-center justify-center">
       {/* Rotating glowing ring */}
       <div
-        ref={ringRef}
         className="absolute inset-0 rounded-full blur-xl"
         style={{
           background:
