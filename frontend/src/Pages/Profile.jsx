@@ -12,14 +12,6 @@ const ProfilePicWithRing = ({ src, onClick }) => {
 
   useEffect(() => {
     
-    gsap.to(ringRef.current, {
-      rotation: 360,
-      duration: 6,
-      repeat: -1,
-      ease: "linear",
-    });
-
-    
     gsap.to(ringGradientRef.current, {
       backgroundPosition: "200% 0%",
       duration: 4,
@@ -31,7 +23,7 @@ const ProfilePicWithRing = ({ src, onClick }) => {
 
   return (
     <div className="relative w-32 h-32 flex items-center justify-center">
-      {/* Rotating glowing ring */}
+      
       <div
         className="absolute inset-0 rounded-full blur-xl"
         style={{
@@ -42,10 +34,10 @@ const ProfilePicWithRing = ({ src, onClick }) => {
         ref={ringGradientRef}
       ></div>
 
-      {/* Inner mask to make the glow ring around the pic */}
+      
       <div className="absolute inset-1 rounded-full bg-[#121826]"></div>
 
-      {/* Profile picture */}
+      
       <img
         src={src}
         alt="Profile"
@@ -166,7 +158,7 @@ const Profile = () => {
 
   return (
     <div className="bg-[#0A0F1C] min-h-screen w-full text-zinc-400 flex flex-col overflow-x-hidden">
-      {/* Navbar */}
+      
       <nav className="bg-[#121826]/80 h-20 w-full px-6 flex justify-between items-center sticky top-0 z-50 shadow-md backdrop-blur-md">
         <a href="/" className="block">
           <img
@@ -182,7 +174,7 @@ const Profile = () => {
         </a>
       </nav>
 
-      {/* Profile Picture Update Modal */}
+      
       {picChangeOpen && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-gray-900 text-white rounded-2xl shadow-xl p-8 w-[90%] max-w-md relative">
@@ -210,11 +202,11 @@ const Profile = () => {
         </div>
       )}
 
-      {/* Main Profile Section */}
+      
       <section className="flex flex-wrap px-4 sm:px-6 py-10 gap-6">
         <div className="flex-1 min-w-[300px] max-w-full md:max-w-[50%] bg-[#121826] rounded-xl border border-zinc-700 shadow-md p-6 flex flex-col sm:flex-row gap-6">
           <div className="flex flex-col items-center sm:items-start">
-            {/* GSAP Rotating Ring Profile Picture */}
+            
             <ProfilePicWithRing src={userData.profilePic} onClick={() => setPicChangeOpen(true)} />
 
             <p className="mt-4 text-sm text-zinc-400">
@@ -225,7 +217,7 @@ const Profile = () => {
             </p>
           </div>
 
-          {/* Bio Editor */}
+          
           <div className="flex flex-col justify-start gap-4 w-full">
             {userData.bio && (
               <div>
@@ -265,7 +257,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Other Profile Sections */}
+        
         <div className="flex-1 min-w-[300px] max-w-full md:max-w-[50%] bg-[#121826] rounded-xl border border-zinc-700 shadow-md p-6 space-y-6">
           <div>
             <h2 className="text-lg text-white font-semibold">Name</h2>
@@ -291,7 +283,7 @@ const Profile = () => {
         </div>
       </section>
 
-      {/* Skills Section */}
+      
       <section className="w-full bg-[#121826] rounded-xl border border-zinc-700 shadow-md p-6 mt-6">
         <h2 className="text-lg text-white font-semibold mb-4">Skills</h2>
 

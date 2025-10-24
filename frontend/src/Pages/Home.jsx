@@ -2,7 +2,7 @@ import React, { useLayoutEffect, useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useNavigate } from "react-router-dom";
-import Footer from "../components/footer";
+import Footer from '../components/Footer';
 
 gsap.registerPlugin(ScrollTrigger);
 
