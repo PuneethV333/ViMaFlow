@@ -9,16 +9,18 @@ import {
 import { Auth, googleProvider, gitProvider } from "../config/firebase";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 export const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+const AuthProvider = ({ children }) => {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
   const [project, setProject] = useState([]);
+  const [postData, setPostData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch user data from backend
   const fetchUserData = async (firebaseUser) => {
     if (!firebaseUser) return setUserData(null);
     try {
@@ -34,7 +36,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Fetch project data
+  const fetchPostData = async (firebaseUser) => {
+    if (!firebaseUser) return setPostData(null);
+    try {
+      const token = await firebaseUser.getIdToken(true);
+      const res = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/api/posts`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setPostData(res.data);
+    } catch (err) {
+      console.warn("Backend posts not found yet:", err.response?.data?.message);
+      setPostData(null);
+    }
+  };
+
   const fetchProjectData = async (userid) => {
     if (!userid) return [];
     try {
@@ -51,8 +67,13 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(Auth, async (crrUser) => {
       setUser(crrUser);
-      if (crrUser) await fetchUserData(crrUser);
-      else setUserData(null);
+      if (crrUser) {
+        await fetchUserData(crrUser);
+        await fetchPostData(crrUser);
+      } else {
+        setUserData(null);
+        setPostData(null);
+      }
       setLoading(false);
     });
     return () => unsubscribe();
@@ -73,7 +94,11 @@ export const AuthProvider = ({ children }) => {
 
   const signUpViaEmail = async (email, password, fullname) => {
     try {
-      const userCred = await createUserWithEmailAndPassword(Auth, email, password);
+      const userCred = await createUserWithEmailAndPassword(
+        Auth,
+        email,
+        password
+      );
       await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/users/signup`, {
         email,
         firebaseUid: userCred.user.uid,
@@ -103,6 +128,8 @@ export const AuthProvider = ({ children }) => {
     await Auth.signOut();
     setUser(null);
     setUserData(null);
+    setPostData(null);
+    navigate("/");
     toast.info("👋 Signed out successfully!");
   };
 
@@ -145,6 +172,8 @@ export const AuthProvider = ({ children }) => {
         userData,
         loading,
         project,
+        postData,
+        setPostData,
         signUpViaEmail,
         signInViaEmail,
         signout,
@@ -153,6 +182,7 @@ export const AuthProvider = ({ children }) => {
         updateUserData,
         fetchUserData,
         fetchProjectData,
+        fetchPostData,
       }}
     >
       {children}

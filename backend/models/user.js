@@ -12,6 +12,8 @@ const userSchema = new mongoose.Schema({
     description: { type: String, default: "" },
     skills: { type: [String], default: [] },
   },
+  following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  savedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
 });
 
 module.exports = mongoose.model("User", userSchema);

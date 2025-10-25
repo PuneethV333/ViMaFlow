@@ -20,14 +20,14 @@ Keep it concise, inspiring, and specific (3–4 lines).
 `;
 
   try {
-    console.log("⚙️ Calling Gemini SDK...");
+    
 
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
-    console.log("✅ Gemini Response:", text);
+    
     return text.trim();
   } catch (err) {
     console.error("🚫 Gemini SDK error:", err.message || err);
@@ -167,7 +167,6 @@ const updateBios = async (req, res) => {
 const updateAiGeneratedPath = async (req, res) => {
   try {
     const { answers, userid } = req.body;
-    console.log("📩 Received AI Path Request:", { userid, answers });
 
     if (!answers || Object.keys(answers).length === 0)
       return res.status(400).json({ message: "Answer all questions" });
@@ -178,7 +177,6 @@ const updateAiGeneratedPath = async (req, res) => {
     const user = await User.findById(userid);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    console.log("🚀 Generating new AI path with Gemini...");
     const rawPath = await generateAiTextWithGemini(answers);
     const parsed = parseCareerPath(rawPath);
 

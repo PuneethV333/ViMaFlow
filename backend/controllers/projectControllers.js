@@ -4,7 +4,6 @@ const Project = require('../models/projects');
 const getProjectDate = async (req, res) => {
   try {
     const { userid } = req.params; 
-    console.log("Fetching projects for user:", userid);
 
     const projects = await Project.find({ userId: userid });
 

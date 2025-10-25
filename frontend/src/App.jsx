@@ -7,6 +7,7 @@ import Dashboard from "./Pages/Dashboard";
 import Profile from "./Pages/Profile";
 import { ToastContainer } from "react-toastify";
 import LoginRestriction from "./RistrictedRoutes/LoginRistricion";
+import PostDetails from "./components/PostDetails";
 
 const App = () => {
   return (
@@ -29,6 +30,14 @@ const App = () => {
           element={
             <LoginRestriction>
               <Profile />
+            </LoginRestriction>
+          }
+        />
+        <Route
+          path="/post/:id"
+          element={
+            <LoginRestriction>
+              <PostDetails />
             </LoginRestriction>
           }
         />

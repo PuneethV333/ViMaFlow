@@ -5,7 +5,8 @@ const cors = require("cors");
 const connect = require("./db/db");
 const adminRoutes = require("./routes/adminRoutes");
 const userRoutes = require("./routes/userRoutes");
-const projectRoutes = require('./routes/projectRoutes');
+const projectRoutes = require("./routes/projectRoutes");
+const postRoutes = require("./routes/postRoutes");
 
 connect();
 const app = express();
@@ -20,6 +21,7 @@ app.use(
 app.use("/api/admin", adminRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/project", projectRoutes);
+app.use("/api/posts", postRoutes);
 
 app.get("/", (req, res) => {
   res.send("All set");

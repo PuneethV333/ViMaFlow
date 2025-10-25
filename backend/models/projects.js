@@ -6,14 +6,12 @@ const projectSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      trim: true,
       minlength: 5,
       maxlength: 50,
     },
     description: {
       type: String,
       required: true,
-      trim: true,
       maxlength: 300,
     },
     technologies: {
@@ -28,17 +26,16 @@ const projectSchema = new mongoose.Schema(
       type: String,
       unique: true,
       sparse: true,
-      trim: true,
     },
     githublink: {
       type: String,
       unique: true,
       sparse: true,
-      trim: true,
     },
     image: {
       type: String,
-      default: "https://res.cloudinary.com/demo/image/upload/v1699999999/default_project.png",
+      default:
+        "https://res.cloudinary.com/demo/image/upload/v1699999999/default_project.png",
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,

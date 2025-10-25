@@ -6,12 +6,12 @@ import { toast } from "react-toastify";
 import Footer from "../components/Footer";
 import ViMaCompass from "../components/ViMaCompass";
 import { gsap } from "gsap";
+import ProfilePostSection from "../components/ProfilePostSection";
 
 const ProfilePicWithRing = ({ src, onClick }) => {
   const ringGradientRef = useRef();
 
   useEffect(() => {
-    
     gsap.to(ringGradientRef.current, {
       backgroundPosition: "200% 0%",
       duration: 4,
@@ -23,7 +23,6 @@ const ProfilePicWithRing = ({ src, onClick }) => {
 
   return (
     <div className="relative w-32 h-32 flex items-center justify-center">
-      
       <div
         className="absolute inset-0 rounded-full blur-xl"
         style={{
@@ -34,10 +33,8 @@ const ProfilePicWithRing = ({ src, onClick }) => {
         ref={ringGradientRef}
       ></div>
 
-      
       <div className="absolute inset-1 rounded-full bg-[#121826]"></div>
 
-      
       <img
         src={src}
         alt="Profile"
@@ -49,11 +46,13 @@ const ProfilePicWithRing = ({ src, onClick }) => {
 };
 
 const Profile = () => {
-  const { userData, loading, project, updateUserData } = useContext(AuthContext);
+  const { userData, loading, project, updateUserData, user } =
+    useContext(AuthContext);
   const [bio, setBio] = useState(userData?.bio || "");
   const [editOpen, setEditOpen] = useState(false);
   const [picChangeOpen, setPicChangeOpen] = useState(false);
   const [profilePic, setProfilePic] = useState(null);
+  const [userPost, setUserPost] = useState(null);
 
   const skillIcons = {
     Python: "https://cdn-icons-png.flaticon.com/512/5968/5968350.png",
@@ -85,6 +84,25 @@ const Profile = () => {
     Linux: "https://cdn-icons-png.flaticon.com/512/226/226772.png",
   };
 
+  useEffect(() => {
+    const fetchUserPosts = async () => {
+      if (!user) return;
+
+      try {
+        const token = await user.getIdToken(true);
+        const res = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/api/posts/user/${userData._id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setUserPost(res.data);
+      } catch (err) {
+        console.error("Error fetching user's posts:", err);
+      }
+    };
+
+    fetchUserPosts();
+  }, [user, userData]);
+
   if (loading)
     return (
       <div className="w-full h-screen flex items-center justify-center bg-[#121826]">
@@ -102,8 +120,10 @@ const Profile = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) return toast.error("File size must be < 5MB");
-    if (!file.type.startsWith("image/")) return toast.error("Select image file only");
+    if (file.size > 5 * 1024 * 1024)
+      return toast.error("File size must be < 5MB");
+    if (!file.type.startsWith("image/"))
+      return toast.error("Select image file only");
     setProfilePic(file);
   };
 
@@ -113,7 +133,10 @@ const Profile = () => {
       if (profilePic instanceof File) {
         const formData = new FormData();
         formData.append("file", profilePic);
-        formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+        formData.append(
+          "upload_preset",
+          import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+        );
 
         const cloudRes = await axios.post(
           `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
@@ -122,10 +145,13 @@ const Profile = () => {
         imageUrl = cloudRes.data.secure_url;
       }
 
-      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/users/update/profilePic`, {
-        imageUrl,
-        userid: userData._id,
-      });
+      await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/update/profilePic`,
+        {
+          imageUrl,
+          userid: userData._id,
+        }
+      );
 
       updateUserData({ profilePic: imageUrl });
       toast.success("Profile picture updated!");
@@ -133,7 +159,9 @@ const Profile = () => {
       setProfilePic(null);
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || "Failed to update profile pic");
+      toast.error(
+        err.response?.data?.message || "Failed to update profile pic"
+      );
     }
   };
 
@@ -142,10 +170,13 @@ const Profile = () => {
       if (!bio) return toast.error("Enter bio");
       if (bio.length > 300) return toast.error("Bio max 300 characters");
 
-      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/users/update/bio`, {
-        bio,
-        userid: userData._id,
-      });
+      await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/update/bio`,
+        {
+          bio,
+          userid: userData._id,
+        }
+      );
 
       updateUserData({ bio });
       toast.success("Bio updated successfully!");
@@ -158,7 +189,6 @@ const Profile = () => {
 
   return (
     <div className="bg-[#0A0F1C] min-h-screen w-full text-zinc-400 flex flex-col overflow-x-hidden">
-      
       <nav className="bg-[#121826]/80 h-20 w-full px-6 flex justify-between items-center sticky top-0 z-50 shadow-md backdrop-blur-md">
         <a href="/" className="block">
           <img
@@ -174,7 +204,6 @@ const Profile = () => {
         </a>
       </nav>
 
-      
       {picChangeOpen && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-gray-900 text-white rounded-2xl shadow-xl p-8 w-[90%] max-w-md relative">
@@ -202,22 +231,24 @@ const Profile = () => {
         </div>
       )}
 
-      
       <section className="flex flex-wrap px-4 sm:px-6 py-10 gap-6">
         <div className="flex-1 min-w-[300px] max-w-full md:max-w-[50%] bg-[#121826] rounded-xl border border-zinc-700 shadow-md p-6 flex flex-col sm:flex-row gap-6">
           <div className="flex flex-col items-center sm:items-start">
-            
-            <ProfilePicWithRing src={userData.profilePic} onClick={() => setPicChangeOpen(true)} />
+            <ProfilePicWithRing
+              src={userData.profilePic}
+              onClick={() => setPicChangeOpen(true)}
+            />
 
             <p className="mt-4 text-sm text-zinc-400">
               Joined on:{" "}
               <span className="text-white font-medium">
-                {userData.createdAt ? new Date(userData.createdAt).toLocaleDateString() : "N/A"}
+                {userData.createdAt
+                  ? new Date(userData.createdAt).toLocaleDateString()
+                  : "N/A"}
               </span>
             </p>
           </div>
 
-          
           <div className="flex flex-col justify-start gap-4 w-full">
             {userData.bio && (
               <div>
@@ -257,7 +288,6 @@ const Profile = () => {
           </div>
         </div>
 
-        
         <div className="flex-1 min-w-[300px] max-w-full md:max-w-[50%] bg-[#121826] rounded-xl border border-zinc-700 shadow-md p-6 space-y-6">
           <div>
             <h2 className="text-lg text-white font-semibold">Name</h2>
@@ -283,7 +313,22 @@ const Profile = () => {
         </div>
       </section>
 
-      
+      <section className="w-full bg-[#121826] rounded-xl border border-zinc-700 shadow-md p-6 mt-6">
+        <h2 className="text-lg text-white font-semibold mb-4">My Posts</h2>
+
+        {userPost && userPost.length > 0 ? (
+          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {userPost.map((p, i) => (
+              <ProfilePostSection key={i} info={p} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-400 text-center w-full text-lg">
+            No posts yet
+          </p>
+        )}
+      </section>
+
       <section className="w-full bg-[#121826] rounded-xl border border-zinc-700 shadow-md p-6 mt-6">
         <h2 className="text-lg text-white font-semibold mb-4">Skills</h2>
 
@@ -292,7 +337,8 @@ const Profile = () => {
             {userData.skills.map((skill, i) => {
               const key = skill.replace(/[^a-zA-Z0-9]/g, "");
               const icon =
-                skillIcons[key] || "https://cdn-icons-png.flaticon.com/512/565/565547.png";
+                skillIcons[key] ||
+                "https://cdn-icons-png.flaticon.com/512/565/565547.png";
 
               return (
                 <div
@@ -311,6 +357,7 @@ const Profile = () => {
       </section>
 
       <ViMaCompass />
+
       <Footer />
     </div>
   );

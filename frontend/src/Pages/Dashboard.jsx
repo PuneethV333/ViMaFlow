@@ -5,23 +5,80 @@ import { useNavigate } from "react-router-dom";
 import { HiMiniChatBubbleLeftEllipsis } from "react-icons/hi2";
 import { HiMenu } from "react-icons/hi";
 import { IoIosLogOut } from "react-icons/io";
-import Footer from "../components/footer";
+import Footer from "../components/Footer";
 import Analytics from "../components/Analytics";
+import Post from "../components/Post";
+import { IoIosAddCircleOutline } from "react-icons/io";
+import { X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-toastify";
+import axios from "axios";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, userData, loading, signout } = useContext(AuthContext);
+  const { user, userData, loading, setPostData, signout } =
+    useContext(AuthContext);
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
-  
+  const [openAddPost, setOpenAddPost] = useState(false);
+  const [description, setDescription] = useState("");
+  const [title, setTitle] = useState("");
+  const [postImg, setPostImg] = useState("");
 
-  if (loading) {
-    return (
-      <div className="w-full h-screen flex items-center justify-center bg-[#121826]">
-        <div className="loader animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024)
+      return toast.error("File size must be < 5MB");
+    if (!file.type.startsWith("image/"))
+      return toast.error("Select image file only");
+    setPostImg(file);
+  };
+
+  const updatePosts = async () => {
+    try {
+      let imageUrl = postImg;
+      if (postImg instanceof File) {
+        const formData = new FormData();
+        formData.append("file", postImg);
+        formData.append(
+          "upload_preset",
+          import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+        );
+
+        const cloudRes = await axios.post(
+          `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
+          formData
+        );
+        imageUrl = cloudRes.data.secure_url;
+      }
+
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/posts/upload`,
+        {
+          imageUrl,
+          title,
+          description,
+          userid: userData._id,
+        }
+      );
+      const newPost = res.data.post;
+      setPostData((prev) => [newPost, ...prev]);
+
+      toast.success("Profile picture updated!");
+      setOpenAddPost(false);
+      setPostImg(null);
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Failed to add post");
+    }
+  };
+
+  useEffect(() => {
+    if (openAddPost) {
+      setOpen(!open);
+    }
+  }, [openAddPost]);
 
   const colorMap = {
     green: "text-green-400",
@@ -88,6 +145,73 @@ const Dashboard = () => {
         </p>
       </div>
 
+      <Post />
+
+      <AnimatePresence>
+        {openAddPost && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="bg-[#0A0F1C] w-full max-w-2xl p-6 rounded-2xl shadow-2xl border border-cyan-500/20 relative"
+            >
+              <motion.button
+                whileHover={{ rotate: 90 }}
+                onClick={() => setOpenAddPost(false)}
+                className="absolute top-4 right-4 p-1 hover:bg-gray-800 rounded-full"
+              >
+                <X className="w-5 h-5 text-gray-400" />
+              </motion.button>
+
+              <h2 className="text-white text-xl font-bold mb-4">
+                Add New Post
+              </h2>
+
+              <div className="flex flex-col gap-4">
+                <input
+                  value={title}
+                  onChange={(e) => {
+                    setTitle(e.target.value);
+                  }}
+                  type="text"
+                  placeholder="Post title"
+                  className="w-full p-3 rounded-md bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                />
+                <textarea
+                  placeholder="Post description"
+                  value={description}
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                  }}
+                  rows={4}
+                  className="w-full p-3 rounded-md bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="text-gray-300"
+                  onChange={handleFileChange}
+                />
+
+                <button
+                  className="px-6 py-2 bg-cyan-600 rounded-md hover:bg-cyan-500 text-white font-semibold transition"
+                  onClick={updatePosts}
+                >
+                  Post
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="fixed bottom-6 right-6 sm:bottom-10 sm:right-10 z-50">
         <div
           ref={menuRef}
@@ -102,6 +226,16 @@ const Dashboard = () => {
           >
             <HiMiniChatBubbleLeftEllipsis className="text-xl" />
             <span className="text-sm font-medium">Chat</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setOpenAddPost(true);
+            }}
+            className="flex items-center gap-3 hover:text-green-400 transition text-left py-2"
+          >
+            <IoIosAddCircleOutline className="text-xl" />
+            <span className="text-sm font-medium">Add Post</span>
           </button>
 
           <button

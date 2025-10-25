@@ -162,7 +162,6 @@ const ViMaCompass = () => {
     setShowQuiz(true);
   };
 
-  const pathText = typeof aiGeneratedPath === "string" ? aiGeneratedPath : aiGeneratedPath?.raw;
 
   return (
     <div className="bg-[#0A0F1C] min-h-screen flex flex-col items-center justify-center text-white px-4 py-8 sm:py-10">
