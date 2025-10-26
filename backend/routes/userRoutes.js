@@ -8,11 +8,13 @@ const {
   updateProfilePic,
   updateBios,
   updateAiGeneratedPath,
+  getAllUser,
 } = require("../controllers/userControllers");
 
 const router = express.Router();
 
 router.get("/me", verifyToken, signInViaEmail);
+router.get("/allUsers", getAllUser);
 router.post("/signup", signUpViaEmail);
 router.post("/google", viaGoogle);
 router.post("/git", viaGit);

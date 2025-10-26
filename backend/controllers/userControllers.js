@@ -4,6 +4,16 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+const getAllUser = async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 const generateAiTextWithGemini = async (answers) => {
   const { q1, q2, q3, q4, q5, q6 } = answers;
 
@@ -20,14 +30,11 @@ Keep it concise, inspiring, and specific (3–4 lines).
 `;
 
   try {
-    
-
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
-    
     return text.trim();
   } catch (err) {
     console.error("🚫 Gemini SDK error:", err.message || err);
@@ -180,7 +187,6 @@ const updateAiGeneratedPath = async (req, res) => {
     const rawPath = await generateAiTextWithGemini(answers);
     const parsed = parseCareerPath(rawPath);
 
-    
     user.aiGeneratedPath = {
       raw: rawPath,
       title: parsed.title,
@@ -204,8 +210,8 @@ const updateAiGeneratedPath = async (req, res) => {
   }
 };
 
-
 module.exports = {
+  getAllUser,
   signInViaEmail,
   signUpViaEmail,
   viaGoogle,

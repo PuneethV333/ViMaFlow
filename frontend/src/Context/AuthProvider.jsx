@@ -20,6 +20,19 @@ const AuthProvider = ({ children }) => {
   const [project, setProject] = useState([]);
   const [postData, setPostData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [allUsers, setAllUsers] = useState(null);
+
+  const fetchAllUserData = async () => {
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/allUsers`
+      );
+      setAllUsers(res.data);
+    } catch (err) {
+      console.warn("Backend user not found yet:", err.response?.data?.message);
+      setAllUsers(null);
+    }
+  };
 
   const fetchUserData = async (firebaseUser) => {
     if (!firebaseUser) return setUserData(null);
@@ -70,9 +83,11 @@ const AuthProvider = ({ children }) => {
       if (crrUser) {
         await fetchUserData(crrUser);
         await fetchPostData(crrUser);
+        await fetchAllUserData();
       } else {
         setUserData(null);
         setPostData(null);
+        setAllUsers(null);
       }
       setLoading(false);
     });
@@ -173,6 +188,7 @@ const AuthProvider = ({ children }) => {
         loading,
         project,
         postData,
+        allUsers,
         setPostData,
         signUpViaEmail,
         signInViaEmail,
@@ -181,6 +197,7 @@ const AuthProvider = ({ children }) => {
         viaGit,
         updateUserData,
         fetchUserData,
+        fetchAllUserData,
         fetchProjectData,
         fetchPostData,
       }}
