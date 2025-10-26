@@ -280,6 +280,8 @@ const Chats = () => {
                     {activeUser.status === "online"
                       ? "Active now"
                       : `Last seen ${activeUser.lastSeen}`}
+
+                      
                   </p>
                 </div>
               </div>
