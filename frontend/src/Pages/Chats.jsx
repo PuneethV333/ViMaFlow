@@ -167,7 +167,7 @@ const Chats = () => {
   }, []);
 
   return (
-    <div className="flex h-screen bg-gray-900 overflow-hidden">
+    <div className="flex h-screen bg-gray-900 overflow-hidden ">
       <div
         className={`${isMobileView && activeUser ? "hidden" : "flex"} flex-col w-full md:w-96 bg-gray-800 border-r border-gray-700 transition-all duration-300`}
       >
@@ -245,7 +245,7 @@ const Chats = () => {
       </div>
 
       <div
-        className={`${isMobileView && !activeUser ? "hidden" : "flex"} flex-1 flex-col bg-gray-900 transition-all duration-300`}
+        className={`${isMobileView && !activeUser ? "hidden" : "flex"} flex-1 flex-col bg-[url('https://res.cloudinary.com/deymewscv/image/upload/v1760816654/create_a_dark-themed_alysmn.png')] bg-no-repeat bg-[#0A0F1C] transition-all duration-300`}
       >
         {activeUser ? (
           <>
@@ -285,7 +285,7 @@ const Chats = () => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 md:space-y-4 flex flex-col justify-end">
+            <div className="flex-1 p-4 space-y-3 md:space-y-4 overflow-y-auto ">
               {chats.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-gray-400 text-center">
                   <div>
