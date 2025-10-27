@@ -210,6 +210,101 @@ const updateAiGeneratedPath = async (req, res) => {
   }
 };
 
+const cleanJson = (text) =>
+  text.replace(/```json|```/g, "").replace(/[\u0000-\u001F]+/g, "").trim();
+
+const generateAiReview = async (data) => {
+  const safeResume = data.slice(0, 10000); 
+  const prompt = `
+You are a professional resume reviewer.
+Return the response strictly in valid JSON (no text outside JSON):
+
+{
+  "score": number,
+  "strengths": [string],
+  "suggestions": [string],
+  "atsFlags": [string]
+}
+
+Resume:
+${safeResume}
+  `;
+
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = cleanJson(response.text());
+
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      console.error("⚠️ JSON parse error. Raw:", text);
+      return {
+        score: 0,
+        strengths: ["Could not parse AI response."],
+        suggestions: ["Try re-uploading resume."],
+        atsFlags: [],
+      };
+    }
+  } catch (err) {
+    console.error("🚫 Gemini SDK error:", err.message || err);
+    return {
+      score: 0,
+      strengths: [],
+      suggestions: ["AI service temporarily unavailable."],
+      atsFlags: [],
+    };
+  }
+};
+
+const reviewResume = async (req, res) => {
+  try {
+    const { firebaseUid } = req.user || {};
+    const { resumeData, pdfUrl } = req.body;
+
+    if (!firebaseUid) return res.status(401).json({ message: "Unauthorized" });
+    if (!resumeData) return res.status(400).json({ message: "Missing resume data" });
+
+    const aiReview = await generateAiReview(resumeData);
+
+    const summaryText = resumeData.split(" ").slice(0, 200).join(" ");
+    const review = {
+      resumeText: summaryText,
+      pdfUrl: pdfUrl || "",
+      score: aiReview.score,
+      strengths: aiReview.strengths,
+      suggestions: aiReview.suggestions,
+      atsFlags: aiReview.atsFlags,
+      reviewedAt: new Date(),
+    };
+
+    const user = await User.findOne({ firebaseUid }).select("resumeReviews");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.resumeReviews.push(review);
+    await user.save();
+
+    console.log(review);
+    
+
+    res.status(200).json({
+      success: true,
+      message: "Resume reviewed successfully",
+      data: review,
+    });
+  } catch (err) {
+    console.error("🔥 Error reviewing resume:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error reviewing resume",
+      error: err.message,
+    });
+  }
+};
+
+
+
 module.exports = {
   getAllUser,
   signInViaEmail,
@@ -219,4 +314,5 @@ module.exports = {
   updateProfilePic,
   updateBios,
   updateAiGeneratedPath,
+  reviewResume
 };

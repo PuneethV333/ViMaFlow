@@ -9,7 +9,7 @@ connect();
 
 const server = http.createServer(app);
 const io = socketIO(server, {
-  cros: {
+  cors: {
     origin: process.env.VITE_FRONTEND_URL || "http://localhost:5173",
     methods: ["GET", "POST"],
   },

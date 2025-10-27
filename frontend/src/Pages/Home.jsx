@@ -114,7 +114,10 @@ const Home = () => {
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-    const globeParticles = 4500;
+    let globeParticles = 4500;
+    if (window.innerWidth < 768) globeParticles = 1500; 
+    if (window.innerWidth < 480) globeParticles = 800; 
+
     const radius = 90;
     const globeGeometry = new THREE.BufferGeometry();
     const positions = new Float32Array(globeParticles * 3);
@@ -153,7 +156,7 @@ const Home = () => {
     });
 
     const glowShell = new THREE.Mesh(
-      new THREE.SphereGeometry(radius + 5, 64, 64),
+      new THREE.SphereGeometry(radius + 1, 64, 64),
       glowMaterial
     );
     scene.add(glowShell);
@@ -269,14 +272,14 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="bg-slate-950 text-white overflow-hidden">
+    <div className="bg-slate-950 text-white overflow-hidden font-mono">
       <div
         id="cursor"
         className="fixed w-6 h-6 rounded-full pointer-events-none hidden sm:block z-50 mix-blend-difference bg-white opacity-80"
       ></div>
       <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-screen" />
 
-      {/* Hero Section */}
+      
       <section
         ref={heroRef}
         className="relative h-screen flex items-center justify-center px-4"
@@ -302,7 +305,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Features Section */}
+      
       <section ref={featuresRef} className="py-20 px-4">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, i) => (
@@ -359,7 +362,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
+      
       <section className="stats-section relative z-10 py-20 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
@@ -380,14 +383,14 @@ const Home = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
+      
       <section ref={ctaRef} className="relative z-10 py-20 px-4">
         <div className="max-w-3xl mx-auto text-center bg-gradient-to-r from-emerald-600/20 to-blue-600/20 border border-emerald-500/30 rounded-3xl p-12">
           <h2 className="text-5xl font-black mb-6">
             Ready to Transform Your Career?
           </h2>
-          <p className="text-xl text-gray-300 mb-8">
-            Join thousands of professionals using Vima Flow to find their dream
+          <p className="text-xl text-gray-300 mb-8 ">
+            Join thousands of professionals using ViMa Flow to find their dream
             jobs and build meaningful connections.
           </p>
           <button
@@ -401,7 +404,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Footer */}
+      
       <footer className="relative z-10 border-t border-slate-800 py-12 px-4 bg-gradient-to-b from-slate-950 to-slate-900">
         <div className="max-w-6xl mx-auto text-center">
           <div className="mb-8">

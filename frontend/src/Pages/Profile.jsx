@@ -7,6 +7,7 @@ import Footer from "../components/Footer";
 import ViMaCompass from "../components/ViMaCompass";
 import { gsap } from "gsap";
 import ProfilePostSection from "../components/ProfilePostSection";
+import ResumeReviewer from "../components/ResumeReviewer";
 
 const ProfilePicWithRing = ({ src, onClick }) => {
   const ringGradientRef = useRef();
@@ -357,6 +358,8 @@ const Profile = () => {
       </section>
 
       <ViMaCompass />
+
+      <ResumeReviewer/>
 
       <Footer />
     </div>

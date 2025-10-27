@@ -9,6 +9,7 @@ const {
   updateBios,
   updateAiGeneratedPath,
   getAllUser,
+  reviewResume,
 } = require("../controllers/userControllers");
 
 const router = express.Router();
@@ -21,5 +22,6 @@ router.post("/git", viaGit);
 router.post("/update/profilePic", updateProfilePic);
 router.post("/update/bio", updateBios);
 router.post("/update/aiGeneratedPath", updateAiGeneratedPath);
+router.post("/review",verifyToken ,reviewResume);
 
 module.exports = router;
