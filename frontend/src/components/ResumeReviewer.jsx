@@ -93,10 +93,10 @@ const ResumeReviewer = () => {
     <div className="bg-[#0A0F1C] min-h-screen flex flex-col items-center justify-center text-white px-4 py-8">
       <div className="w-full max-w-2xl bg-zinc-900/70 rounded-3xl shadow-2xl backdrop-blur-md border border-zinc-800 p-6 sm:p-8">
         <h1 className="text-3xl sm:text-4xl font-bold text-center mb-6 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent">
-          🤖 AI Resume Reviewer
+          <span className="bg-transparent" >🤖</span> AI Resume Reviewer
         </h1>
 
-        =
+      
         <div className="flex flex-col items-center gap-4">
           <label className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer hover:border-cyan-500 transition text-center">
             <Upload size={40} className="text-cyan-400 mb-2" />

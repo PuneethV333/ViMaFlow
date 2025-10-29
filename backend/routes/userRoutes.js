@@ -25,3 +25,7 @@ router.post("/update/aiGeneratedPath", updateAiGeneratedPath);
 router.post("/review",verifyToken ,reviewResume);
 
 module.exports = router;
+
+
+
+

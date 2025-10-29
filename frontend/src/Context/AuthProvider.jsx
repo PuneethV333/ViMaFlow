@@ -108,24 +108,27 @@ const AuthProvider = ({ children }) => {
   };
 
   const signUpViaEmail = async (email, password, fullname) => {
-    try {
-      const userCred = await createUserWithEmailAndPassword(
-        Auth,
-        email,
-        password
-      );
-      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/users/signup`, {
+  try {
+    const userCred = await createUserWithEmailAndPassword(Auth, email, password);
+
+    const { data: newUserData } = await axios.post(
+      `${import.meta.env.VITE_BACKEND_URL}/api/users/signup`,
+      {
         email,
         firebaseUid: userCred.user.uid,
         displayName: fullname,
-      });
-      toast.success("🎉 User registered successfully!");
-      return userCred.user;
-    } catch (err) {
-      console.error(err);
-      toast.error(err.message || "Signup failed");
-    }
-  };
+      }
+    );
+
+    toast.success("🎉 User registered successfully!");
+    setUserData(newUserData)
+    return newUserData; 
+  } catch (err) {
+    console.error("Signup error:", err);
+    toast.error(err.response?.data?.message || err.message || "Signup failed");
+  }
+};
+
 
   const signInViaEmail = async (email, password) => {
     try {
