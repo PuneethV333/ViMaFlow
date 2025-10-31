@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Heart,
@@ -17,7 +17,16 @@ import { AuthContext } from "../Context/AuthProvider";
 import { useNavigate } from "react-router-dom";
 
 const PostCard = ({ info }) => {
-  const { user, userData } = useContext(AuthContext);
+  const { user, userData, setUserData, fetchPosts } = useContext(AuthContext);
+
+  const [following, setFollowing] = useState(false);
+
+  useEffect(() => {
+    if (userData?.following?.includes(info.by._id)) {
+      setFollowing(true);
+    }
+  }, [userData, info.by._id]);
+
   const navigate = useNavigate();
 
   const [isLiked, setIsLiked] = useState(
@@ -34,6 +43,7 @@ const PostCard = ({ info }) => {
   const [loadingComment, setLoadingComment] = useState(false);
   const [comments, setComments] = useState(info.comments || []);
   const [openShare, setOpenShare] = useState(false);
+  const [loadingFollow, setLoadingFollow] = useState(false);
 
   const commentCount = comments.length;
 
@@ -99,6 +109,34 @@ const PostCard = ({ info }) => {
     toast.success("Link copied!");
   };
 
+  const handleFollowToggle = async () => {
+    if (!user) return toast.error("Please login first!");
+
+    try {
+      const token = await user.getIdToken();
+      const endpoint = following ? "unfollow" : "follow";
+
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/update/follow`,
+        { endpoint, respientId: info.by._id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const newFollowState = !following;
+      setFollowing(newFollowState);
+      if (res.data) setUserData(res.data);
+
+      await fetchPosts();
+
+      toast.success(
+        newFollowState ? "Now following this user!" : "Unfollowed successfully"
+      );
+    } catch (err) {
+      console.error("Follow/Unfollow error:", err);
+      toast.error("Error updating follow status");
+    }
+  };
+
   return (
     <>
       <motion.div
@@ -126,6 +164,22 @@ const PostCard = ({ info }) => {
                 })}
               </p>
             </div>
+          </div>
+          <div>
+            <button
+              onClick={handleFollowToggle}
+              disabled={loadingFollow}
+              className={`px-6 py-3 rounded-2xl font-semibold transition-all duration-300
+    ${
+      following
+        ? "bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-blue-700 hover:to-cyan-700"
+        : "bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-gray-950"
+    }
+    ${loadingFollow ? "opacity-60 cursor-not-allowed" : ""}
+    text-white shadow-md hover:scale-[1.03] active:scale-[0.97]`}
+            >
+              {loadingFollow ? "..." : following ? "Following" : "Follow"}
+            </button>
           </div>
         </div>
 

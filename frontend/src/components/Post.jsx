@@ -145,6 +145,8 @@ const Post = () => {
           )}
         </AnimatePresence>
       </div>
+
+      
     </div>
   );
 };

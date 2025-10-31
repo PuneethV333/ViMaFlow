@@ -47,6 +47,48 @@ Keep it concise, inspiring, and specific (3–4 lines).
   }
 };
 
+const generateAiRecommendation = async (user, otherUsers) => {
+  const prompt = `
+You are an AI model that outputs only valid JSON.
+Compare the current user's skills to other users and recommend similar or complementary ones.
+
+Current user skills: ${user.skills?.join(", ") || "None"}
+
+Other users (index starts from 1):
+${otherUsers
+    .map(
+      (u, i) =>
+        `User ${i + 1}: ${u.displayName}, Skills: ${u.skills?.join(", ") || "None"}`
+    )
+    .join("\n")}
+
+Return ONLY a valid JSON array of user indexes (e.g. [1, 3, 5]).
+`;
+
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim();
+
+    
+    const clean = text.replace(/```json|```/g, "").replace(/[\u0000-\u001F]+/g, "").trim();
+
+    
+    const match = clean.match(/\[.*?\]/);
+    if (!match) return [];
+
+    const parsed = JSON.parse(match[0]);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.filter((n) => typeof n === "number");
+  } catch (err) {
+    console.error("AI recommendation error:", err.message || err);
+    return [];
+  }
+};
+
+
+
 const parseCareerPath = (text) => {
   const titleMatch = text.match(/\*\*(.*?)\*\*/);
   const title = titleMatch ? titleMatch[1] : "Career Path";
@@ -102,9 +144,13 @@ const viaGoogle = async (req, res) => {
     const { email, displayName, firebaseUid } = req.body;
     if (!email || !firebaseUid || !displayName)
       return res.status(400).json({ message: "Enter all the fields" });
+    let user = await User.findOne({ firebaseUid: firebaseUid });
 
-    const user = await createUser({ email, displayName, firebaseUid });
-    if (!user) return res.status(400).json({ message: "User already exists" });
+    if (!user) {
+      user = await createUser({ email, displayName, firebaseUid });
+      if (!user)
+        return res.status(400).json({ message: "User already exists" });
+    }
 
     res.status(201).json(user);
   } catch (err) {
@@ -211,10 +257,13 @@ const updateAiGeneratedPath = async (req, res) => {
 };
 
 const cleanJson = (text) =>
-  text.replace(/```json|```/g, "").replace(/[\u0000-\u001F]+/g, "").trim();
+  text
+    .replace(/```json|```/g, "")
+    .replace(/[\u0000-\u001F]+/g, "")
+    .trim();
 
 const generateAiReview = async (data) => {
-  const safeResume = data.slice(0, 10000); 
+  const safeResume = data.slice(0, 10000);
   const prompt = `
 You are a professional resume reviewer.
 Return the response strictly in valid JSON (no text outside JSON):
@@ -264,7 +313,8 @@ const reviewResume = async (req, res) => {
     const { resumeData, pdfUrl } = req.body;
 
     if (!firebaseUid) return res.status(401).json({ message: "Unauthorized" });
-    if (!resumeData) return res.status(400).json({ message: "Missing resume data" });
+    if (!resumeData)
+      return res.status(400).json({ message: "Missing resume data" });
 
     const aiReview = await generateAiReview(resumeData);
 
@@ -286,7 +336,6 @@ const reviewResume = async (req, res) => {
     await user.save();
 
     console.log(review);
-    
 
     res.status(200).json({
       success: true,
@@ -303,6 +352,69 @@ const reviewResume = async (req, res) => {
   }
 };
 
+const updateFollowing = async (req, res) => {
+  try {
+    const firebaseUid = req.user.firebaseUid;
+    const { endpoint, respientId } = req.body;
+
+    const user = await User.findOne({ firebaseUid });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const recipient = await User.findById(respientId);
+    if (!recipient)
+      return res.status(404).json({ message: "Recipient not found" });
+
+    if (endpoint === "unfollow") {
+      user.following = user.following.filter(
+        (id) => id.toString() !== respientId
+      );
+    } else {
+      if (!user.following.includes(respientId)) {
+        user.following.push(respientId);
+      }
+    }
+
+    await user.save();
+
+    const updatedUser = await User.findOne({ firebaseUid });
+
+    res.status(200).json(updatedUser);
+  } catch (err) {
+    console.error("🔥 Error in updating user follow:", err);
+    res.status(500).json({
+      message: "Server error updating user follow",
+      error: err.message,
+    });
+  }
+};
+
+const giveRecommendation = async (req, res) => {
+  try {
+    const firebaseUid = req.user.firebaseUid;
+    const user = await User.findOne({ firebaseUid });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const allUsers = await User.find({ _id: { $ne: user._id } });
+    if (allUsers.length === 0)
+      return res.status(200).json({ recommendations: [] });
+
+    const indexes = await generateAiRecommendation(user, allUsers);
+
+    
+    const recommendations = indexes
+      .map((i) => allUsers[i - 1])
+      .filter(Boolean);
+
+    console.log("✅ Recommended Indexes:", indexes);
+    console.log("✅ Recommended Users:", recommendations.map((u) => u.displayName));
+
+    return res.status(200).json({ recommendations });
+  } catch (err) {
+    console.error("🔥 Error generating recommendations:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
 
 
 module.exports = {
@@ -314,5 +426,7 @@ module.exports = {
   updateProfilePic,
   updateBios,
   updateAiGeneratedPath,
-  reviewResume
+  reviewResume,
+  updateFollowing,
+  giveRecommendation,
 };

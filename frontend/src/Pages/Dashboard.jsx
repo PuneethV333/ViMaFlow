@@ -13,11 +13,11 @@ import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
 import axios from "axios";
+import AiRecomendation from "../components/AiRecomendation";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, userData, loading, setPostData, signout } =
-    useContext(AuthContext);
+  const { user, userData, setPostData, signout } = useContext(AuthContext);
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
   const [openAddPost, setOpenAddPost] = useState(false);
@@ -146,6 +146,8 @@ const Dashboard = () => {
       </div>
 
       <Post />
+
+      <AiRecomendation/>
 
       <AnimatePresence>
         {openAddPost && (

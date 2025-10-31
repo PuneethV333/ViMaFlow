@@ -21,6 +21,7 @@ const AuthProvider = ({ children }) => {
   const [postData, setPostData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [allUsers, setAllUsers] = useState(null);
+  const [recomendation,setRecomendation] = useState(null);
 
   const fetchAllUserData = async () => {
     try {
@@ -77,6 +78,20 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  const fetchAiRecommention = async (firebaseUser) => {
+    if (!firebaseUser) return setPostData(null);
+    try {
+      const token = await firebaseUser.getIdToken(true);
+      const res = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/api/users/suggestions`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setRecomendation(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(Auth, async (crrUser) => {
       setUser(crrUser);
@@ -84,6 +99,7 @@ const AuthProvider = ({ children }) => {
         await fetchUserData(crrUser);
         await fetchPostData(crrUser);
         await fetchAllUserData();
+        await fetchAiRecommention(crrUser)
       } else {
         setUserData(null);
         setPostData(null);
@@ -135,6 +151,7 @@ const AuthProvider = ({ children }) => {
       const userCred = await signInWithEmailAndPassword(Auth, email, password);
       await reload(userCred.user);
       await fetchUserData(userCred.user);
+      await fetchAiRecommention(userCred.user);
       toast.success("✅ Logged in successfully!");
     } catch (err) {
       console.error(err);
@@ -160,6 +177,7 @@ const AuthProvider = ({ children }) => {
         firebaseUid: res.user.uid,
       });
       await fetchUserData(res.user);
+      await fetchAiRecommention(res.user);
       toast.success("🎉 Logged in with Google!");
     } catch (err) {
       console.error(err);
@@ -192,6 +210,8 @@ const AuthProvider = ({ children }) => {
         project,
         postData,
         allUsers,
+        recomendation,
+        setUserData,
         setPostData,
         signUpViaEmail,
         signInViaEmail,
