@@ -211,6 +211,7 @@ const AuthProvider = ({ children }) => {
         postData,
         allUsers,
         recomendation,
+        setProject,
         setUserData,
         setPostData,
         signUpViaEmail,

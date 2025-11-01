@@ -52,13 +52,13 @@ const generateAiRecommendation = async (user, otherUsers) => {
 You are an AI model that outputs only valid JSON.
 Compare the current user's skills to other users and recommend similar or complementary ones.
 
-Current user skills: ${user.skills?.join(", ") || "None"}
+Current user skills: ${user.userSkills?.join(", ") || "None"}
 
 Other users (index starts from 1):
 ${otherUsers
     .map(
       (u, i) =>
-        `User ${i + 1}: ${u.displayName}, Skills: ${u.skills?.join(", ") || "None"}`
+        `User ${i + 1}: ${u.displayName}, Skills: ${u.userSkills?.join(", ") || "None"}`
     )
     .join("\n")}
 
@@ -86,8 +86,6 @@ Return ONLY a valid JSON array of user indexes (e.g. [1, 3, 5]).
     return [];
   }
 };
-
-
 
 const parseCareerPath = (text) => {
   const titleMatch = text.match(/\*\*(.*?)\*\*/);
@@ -415,6 +413,29 @@ const giveRecommendation = async (req, res) => {
   }
 };
 
+const updateRoles = async (req,res) => {
+  try {
+    const { role } = req.body;
+    const firebaseUid = req.user.firebaseUid
+    const user = await User.findOneAndUpdate({firebaseUid:firebaseUid},{role:role},{new:true});
+    if(!user) return res.status(404).json({ message: "User not found" });
+
+    await user.save();
+
+    const updatedUser = await User.findOne({ firebaseUid:firebaseUid });
+
+    res.status(200).json(updatedUser);
+
+    
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Server error updating user role",
+      error: err.message,
+    })
+    
+  }
+};
 
 
 module.exports = {
@@ -429,4 +450,5 @@ module.exports = {
   reviewResume,
   updateFollowing,
   giveRecommendation,
+  updateRoles
 };

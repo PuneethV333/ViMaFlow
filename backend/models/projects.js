@@ -5,8 +5,6 @@ const projectSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
-      unique: true,
-      minlength: 5,
       maxlength: 50,
     },
     description: {
@@ -24,13 +22,11 @@ const projectSchema = new mongoose.Schema(
     },
     livelink: {
       type: String,
-      unique: true,
       sparse: true,
     },
     githublink: {
       type: String,
-      unique: true,
-      sparse: true,
+      sparse: true, // ✅ not unique
     },
     image: {
       type: String,
@@ -45,5 +41,9 @@ const projectSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+
+
+projectSchema.index({ title: 1, userId: 1 }, { unique: true });
 
 module.exports = mongoose.model("Project", projectSchema);

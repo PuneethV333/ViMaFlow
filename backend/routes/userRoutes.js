@@ -12,6 +12,7 @@ const {
   reviewResume,
   updateFollowing,
   giveRecommendation,
+  updateRoles,
 } = require("../controllers/userControllers");
 
 const router = express.Router();
@@ -24,6 +25,7 @@ router.post("/google", viaGoogle);
 router.post("/git", viaGit);
 router.post("/update/profilePic", updateProfilePic);
 router.post('/update/follow',verifyToken,updateFollowing);
+router.post('/update/role',verifyToken,updateRoles);
 router.post("/update/bio", updateBios);
 router.post("/update/aiGeneratedPath", updateAiGeneratedPath);
 router.post("/review",verifyToken ,reviewResume);

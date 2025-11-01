@@ -12,10 +12,11 @@ const resumeReviewSchema = new mongoose.Schema({
 
 const userSchema = new mongoose.Schema({
   firebaseUid: { type: String, required: true, unique: true },
+  role: { type: String, enum: ["user", "admin", "mentor"], default: "user" },
   displayName: { type: String, required: true },
   email: { type: String, required: true },
   profilePic: { type: String, default: 'https://res.cloudinary.com/deymewscv/image/upload/v1760774522/hqoltmqamhhjfz7divf1.jpg' },
-  bio: { type: String, default: "" },
+  bio: { type: String, default: "hello world" },
   aiGeneratedPath: {
     raw: { type: String, default: "" },
     title: { type: String, default: "" },
